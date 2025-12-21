@@ -1,7 +1,7 @@
 {
-  "name": "my-package",
-  "version": "0.1.4",
-  "description": "A JavaScript/TypeScript package template for AI-driven development",
+  "name": "lino-cache",
+  "version": "0.1.0",
+  "description": "A cache-manager compatible file-based cache using Links Notation (.lino) format",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -26,19 +26,25 @@
     "changeset:status": "changeset status --since=origin/main"
   },
   "keywords": [
-    "template",
-    "javascript",
-    "typescript",
-    "ai-driven"
+    "cache",
+    "cache-manager",
+    "lino",
+    "links-notation",
+    "file-cache",
+    "persistent-cache",
+    "storage"
   ],
   "author": "",
   "license": "Unlicense",
   "repository": {
     "type": "git",
-    "url": "https://github.com/link-foundation/js-ai-driven-development-pipeline-template"
+    "url": "https://github.com/link-foundation/lino-cache"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "lino-objects-codec": "^0.1.1"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
