@@ -1,31 +1,254 @@
-# js-ai-driven-development-pipeline-template
+# lino-cache
 
-A comprehensive template for AI-driven JavaScript/TypeScript development with full CI/CD pipeline support.
+A cache-manager compatible file-based cache using [Links Notation](https://github.com/link-foundation/links-notation) (.lino) format instead of JSON.
+
+[![Tests](https://github.com/link-foundation/lino-cache/actions/workflows/release.yml/badge.svg)](https://github.com/link-foundation/lino-cache/actions/workflows/release.yml)
+[![npm version](https://img.shields.io/npm/v/lino-cache.svg)](https://www.npmjs.com/package/lino-cache)
+[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
 ## Features
 
-- **Multi-runtime support**: Works with Node.js, Bun, and Deno
-- **Universal testing**: Uses [test-anywhere](https://github.com/link-foundation/test-anywhere) for cross-runtime tests
-- **Automated releases**: Changesets-based versioning with GitHub Actions
-- **Code quality**: ESLint + Prettier with pre-commit hooks via Husky
-- **Package manager agnostic**: Works with npm, yarn, bun, deno, and pnpm
+- **cache-manager compatible** - Implements the full cache-manager store interface
+- **Links Notation storage** - Uses [lino-objects-codec](https://github.com/link-foundation/lino-objects-codec) for serialization
+- **Two storage modes**:
+  - **Folder mode** - Each cache key stored in a separate `.lino` file
+  - **Single-file mode** - All cache entries in one `.lino` file
+- **TTL support** - Time-to-live for automatic expiration
+- **Multi-runtime** - Works with Node.js, Bun, and Deno
+- **TypeScript support** - Full type definitions included
+
+## Installation
+
+```bash
+npm install lino-cache
+```
 
 ## Quick Start
 
-### Using This Template
+```javascript
+import { LinoCache, createLinoCache, linoStore } from 'lino-cache';
 
-1. Click "Use this template" on GitHub to create a new repository
-2. Clone your new repository
-3. Update `package.json` with your package name and description
-4. Update the `PACKAGE_NAME` constant in these scripts:
-   - `scripts/validate-changeset.mjs`
-   - `scripts/publish-to-npm.mjs`
-   - `scripts/format-release-notes.mjs`
-   - `scripts/create-manual-changeset.mjs`
-5. Install dependencies: `npm install`
-6. Start developing!
+// Create a cache instance (folder mode by default)
+const cache = new LinoCache({
+  basePath: '.cache',
+  ttl: 60000, // Default TTL: 1 minute
+});
 
-### Development
+// Basic operations
+await cache.set('user:1', { name: 'Alice', age: 30 });
+const user = await cache.get('user:1');
+console.log(user); // { name: 'Alice', age: 30 }
+
+// Delete
+await cache.del('user:1');
+
+// Check existence
+const exists = await cache.has('user:1'); // false
+```
+
+## Storage Modes
+
+### Folder Mode (Default)
+
+Each cache key is stored in a separate `.lino` file. Best for:
+
+- Large number of cache entries
+- Independent access to cache entries
+- When you need to inspect individual cached values
+
+```javascript
+const cache = new LinoCache({
+  mode: 'folder', // Default
+  basePath: '.cache',
+});
+
+await cache.set('key1', 'value1'); // Creates .cache/key1.lino
+await cache.set('key2', 'value2'); // Creates .cache/key2.lino
+```
+
+### Single-File Mode
+
+All cache entries stored in one `.lino` file. Best for:
+
+- Small number of cache entries
+- When you want all cache data in one file
+- Simpler file management
+
+```javascript
+const cache = new LinoCache({
+  mode: 'file',
+  basePath: '.cache',
+  fileName: 'cache.lino',
+});
+
+await cache.set('key1', 'value1'); // Both stored in
+await cache.set('key2', 'value2'); // .cache/cache.lino
+```
+
+## API Reference
+
+### Constructor Options
+
+```typescript
+interface LinoCacheOptions {
+  ttl?: number; // Default TTL in milliseconds (0 = no expiration)
+  mode?: 'file' | 'folder'; // Storage mode (default: 'folder')
+  basePath?: string; // Cache directory (default: '.cache')
+  fileName?: string; // File name for single-file mode (default: 'cache.lino')
+}
+```
+
+### Methods
+
+#### `set(key, value, [ttl])`
+
+Sets a value in the cache.
+
+```javascript
+await cache.set('key', 'value');
+await cache.set('key', 'value', 5000); // With 5 second TTL
+```
+
+#### `get(key)`
+
+Gets a value from the cache. Returns `undefined` if not found or expired.
+
+```javascript
+const value = await cache.get('key');
+```
+
+#### `del(key)`
+
+Deletes a value from the cache.
+
+```javascript
+const deleted = await cache.del('key'); // true if deleted
+```
+
+#### `has(key)`
+
+Checks if a key exists and is not expired.
+
+```javascript
+const exists = await cache.has('key'); // boolean
+```
+
+#### `keys()`
+
+Returns all non-expired keys.
+
+```javascript
+const allKeys = await cache.keys(); // ['key1', 'key2', ...]
+```
+
+#### `clear()` / `reset()`
+
+Clears all values from the cache.
+
+```javascript
+await cache.clear();
+```
+
+#### `mset(entries)`
+
+Sets multiple values at once.
+
+```javascript
+await cache.mset([
+  { key: 'key1', value: 'value1' },
+  { key: 'key2', value: 'value2', ttl: 5000 },
+]);
+```
+
+#### `mget(keys)`
+
+Gets multiple values at once.
+
+```javascript
+const values = await cache.mget(['key1', 'key2', 'key3']);
+// [value1, value2, undefined]
+```
+
+#### `mdel(keys)`
+
+Deletes multiple values at once.
+
+```javascript
+const deleted = await cache.mdel(['key1', 'key2']);
+```
+
+#### `wrap(key, fn, [ttl])`
+
+Wraps a function with caching. Returns cached value if available, otherwise executes the function and caches the result.
+
+```javascript
+const data = await cache.wrap(
+  'expensive-operation',
+  async () => {
+    // This only runs if not cached
+    return await fetchExpensiveData();
+  },
+  60000
+);
+```
+
+#### `ttl(key)`
+
+Gets the remaining TTL for a key in milliseconds.
+
+```javascript
+const remaining = await cache.ttl('key');
+// > 0: remaining time
+// -1: no TTL set
+// -2: key not found
+```
+
+#### `disconnect()`
+
+Closes the cache and releases resources.
+
+```javascript
+await cache.disconnect();
+```
+
+## Factory Functions
+
+### `createLinoCache(options)`
+
+Creates a new LinoCache instance.
+
+```javascript
+const cache = createLinoCache({ basePath: '.cache' });
+```
+
+### `linoStore(options)`
+
+Creates a cache-manager compatible store.
+
+```javascript
+import { caching } from 'cache-manager';
+import { linoStore } from 'lino-cache';
+
+const cache = await caching(
+  linoStore({
+    basePath: '.cache',
+    ttl: 60000,
+  })
+);
+```
+
+## Why Links Notation?
+
+Links Notation (.lino) is a human-readable serialization format that:
+
+- Supports circular references natively
+- Preserves object identity
+- Is more compact for certain data structures
+- Provides better debugging experience
+
+Learn more: [Links Notation](https://github.com/link-foundation/links-notation)
+
+## Development
 
 ```bash
 # Install dependencies
@@ -34,150 +257,24 @@ npm install
 # Run tests
 npm test
 
-# Or with other runtimes:
-bun test
-deno test --allow-read
-
 # Lint code
 npm run lint
 
 # Format code
 npm run format
 
-# Check all (lint + format + file size)
+# Run all checks
 npm run check
 ```
-
-## Project Structure
-
-```
-.
-├── .changeset/           # Changeset configuration
-├── .github/workflows/    # GitHub Actions CI/CD
-├── .husky/               # Git hooks (pre-commit)
-├── examples/             # Usage examples
-├── scripts/              # Build and release scripts
-├── src/                  # Source code
-│   ├── index.js          # Main entry point
-│   └── index.d.ts        # TypeScript definitions
-├── tests/                # Test files
-├── .eslintrc.js          # ESLint configuration
-├── .prettierrc           # Prettier configuration
-├── bunfig.toml           # Bun configuration
-├── deno.json             # Deno configuration
-└── package.json          # Node.js package manifest
-```
-
-## Design Choices
-
-### Multi-Runtime Support
-
-This template is designed to work seamlessly with all major JavaScript runtimes:
-
-- **Node.js**: Primary runtime, uses built-in test runner (`node --test`)
-- **Bun**: Fast alternative runtime with native test support (`bun test`)
-- **Deno**: Secure runtime with built-in TypeScript support (`deno test`)
-
-The [test-anywhere](https://github.com/link-foundation/test-anywhere) framework provides a unified testing API that works identically across all runtimes.
-
-### Package Manager Agnostic
-
-While `package.json` is the source of truth for dependencies, the template supports:
-
-- **npm**: Default, generates `package-lock.json`
-- **yarn**: Uses `yarn.lock`
-- **bun**: Uses `bun.lockb`
-- **pnpm**: Uses `pnpm-lock.yaml`
-- **deno**: Uses `deno.json` for configuration
-
-Note: `package-lock.json` is not committed by default to allow any package manager.
-
-### Code Quality
-
-- **ESLint**: Configured with recommended rules + Prettier integration
-- **Prettier**: Consistent code formatting
-- **Husky + lint-staged**: Pre-commit hooks ensure code quality
-- **File size limit**: Scripts must stay under 1000 lines for maintainability
-
-### Release Workflow
-
-The release workflow uses [Changesets](https://github.com/changesets/changesets) for version management:
-
-1. **Creating a changeset**: Run `npm run changeset` to document changes
-2. **PR validation**: CI checks for valid changeset in each PR
-3. **Automated versioning**: Merging to `main` triggers version bump
-4. **npm publishing**: Automated via OIDC trusted publishing (no tokens needed)
-5. **GitHub releases**: Auto-created with formatted release notes
-
-#### Manual Releases
-
-Two manual release modes are available via GitHub Actions:
-
-- **Instant release**: Immediately bump version and publish
-- **Changeset PR**: Create a PR with changeset for review
-
-### CI/CD Pipeline
-
-The GitHub Actions workflow (`.github/workflows/release.yml`) provides:
-
-1. **Changeset check**: Validates PR has exactly one changeset
-2. **Lint & format**: Ensures code quality standards
-3. **Test matrix**: 3 runtimes × 3 OS = 9 test combinations
-4. **Release**: Automated versioning and npm publishing
-
-## Configuration
-
-### Updating Package Name
-
-After creating a repository from this template, update the package name in:
-
-1. `package.json`: `"name": "your-package-name"`
-2. `.changeset/config.json`: Package references
-3. Scripts that reference the package name (see Quick Start)
-
-### ESLint Rules
-
-Customize ESLint in `eslint.config.js`. Current configuration:
-
-- ES Modules support
-- Prettier integration
-- No console restrictions (common in CLI tools)
-- Strict equality enforcement
-- Async/await best practices
-- **Strict unused variables rule**: No exceptions - all unused variables, arguments, and caught errors must be removed (no `_` prefix exceptions)
-
-### Prettier Options
-
-Configured in `.prettierrc`:
-
-- Single quotes
-- Semicolons
-- 2-space indentation
-- 80-character line width
-- ES5 trailing commas
-- LF line endings
-
-## Scripts Reference
-
-| Script                 | Description                             |
-| ---------------------- | --------------------------------------- |
-| `npm test`             | Run tests with Node.js                  |
-| `npm run lint`         | Check code with ESLint                  |
-| `npm run lint:fix`     | Fix ESLint issues automatically         |
-| `npm run format`       | Format code with Prettier               |
-| `npm run format:check` | Check formatting without changing files |
-| `npm run check`        | Run all checks (lint + format)          |
-| `npm run changeset`    | Create a new changeset                  |
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes
-4. Create a changeset: `npm run changeset`
-5. Commit your changes (pre-commit hooks will run automatically)
-6. Push and create a Pull Request
 
 ## License
 
 [Unlicense](LICENSE) - Public Domain
+
+## Links
+
+- [GitHub Repository](https://github.com/link-foundation/lino-cache)
+- [npm Package](https://www.npmjs.com/package/lino-cache)
+- [lino-objects-codec](https://github.com/link-foundation/lino-objects-codec)
+- [Links Notation](https://github.com/link-foundation/links-notation)
+- [cache-manager](https://www.npmjs.com/package/cache-manager)
