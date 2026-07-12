@@ -11,3 +11,5 @@ Implement cache-manager compatible interface with Links Notation storage
 - Use lino-objects-codec for serialization to Links Notation format
 - Include comprehensive TypeScript type definitions
 - Add factory functions: `createLinoCache` and `linoStore`
+- Document the Redis, Memcached, and Dragonfly compatibility boundary and
+  staged implementation roadmap

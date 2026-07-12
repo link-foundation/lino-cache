@@ -17,6 +17,11 @@ A cache-manager compatible file-based cache using [Links Notation](https://githu
 - **Multi-runtime** - Works with Node.js, Bun, and Deno
 - **TypeScript support** - Full type definitions included
 
+See the [competitor compatibility matrix](docs/competitor-compatibility.md) for
+an explicit comparison with Redis, Memcached, and Dragonfly and the staged
+implementation roadmap. The package currently provides semantic compatibility
+for common cache operations; it does not claim wire-protocol compatibility.
+
 ## Installation
 
 ```bash
