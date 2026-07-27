@@ -288,6 +288,156 @@ describe('LinoCache - Multi-key Operations', () => {
   });
 });
 
+for (const mode of ['folder', 'file']) {
+  describe(`LinoCache - Atomic Cache Primitives (${mode} mode)`, () => {
+    const cacheDir = path.join(TEST_CACHE_DIR, `atomic-${mode}`);
+    const options = {
+      basePath: cacheDir,
+      mode,
+      fileName: 'cache.lino',
+    };
+
+    beforeEach(async () => {
+      await cleanup(cacheDir);
+    });
+
+    afterEach(async () => {
+      await cleanup(cacheDir);
+    });
+
+    it('should add only when a live key is absent', async () => {
+      const cache = new LinoCache(options);
+
+      expect(await cache.add('key', 'first')).toBe(true);
+      expect(await cache.add('key', 'second')).toBe(false);
+      expect(await cache.get('key')).toBe('first');
+
+      const first = new LinoCache(options);
+      const second = new LinoCache(options);
+      const results = await Promise.all([
+        first.add('lock', 'first'),
+        second.add('lock', 'second'),
+      ]);
+      expect(results.filter(Boolean).length).toBe(1);
+
+      await cache.set('expired', 'old', 20);
+      await delay(30);
+      expect(await cache.add('expired', 'new')).toBe(true);
+      expect(await cache.get('expired')).toBe('new');
+    });
+
+    it('should replace only when a live key is present', async () => {
+      const cache = new LinoCache(options);
+
+      expect(await cache.replace('missing', 'value')).toBe(false);
+      await cache.set('key', 'first');
+      expect(await cache.replace('key', 'second')).toBe(true);
+      expect(await cache.get('key')).toBe('second');
+
+      await cache.set('expired', 'old', 20);
+      await delay(30);
+      expect(await cache.replace('expired', 'new')).toBe(false);
+      expect(await cache.get('expired')).toBe(undefined);
+    });
+
+    it('should touch and atomically get-and-touch live entries', async () => {
+      const cache = new LinoCache(options);
+
+      expect(await cache.touch('missing', 100)).toBe(false);
+      await cache.set('key', 'value', 20);
+      expect(await cache.touch('key', 200)).toBe(true);
+      await delay(30);
+      expect(await cache.getex('key', 300)).toBe('value');
+      expect(await cache.getAndTouch('key', 400)).toBe('value');
+      expect((await cache.ttl('key')) > 200).toBe(true);
+    });
+
+    it('should get and delete an entry atomically', async () => {
+      const cache = new LinoCache(options);
+
+      expect(await cache.getdel('missing')).toBe(undefined);
+      await cache.set('key', { value: 1 });
+      const value = await cache.getdel('key');
+      expect(value.value).toBe(1);
+      expect(await cache.get('key')).toBe(undefined);
+
+      await cache.set('alias', 'value');
+      expect(await cache.getAndDelete('alias')).toBe('value');
+      expect(await cache.get('alias')).toBe(undefined);
+    });
+
+    it('should increment and decrement numbers without losing updates', async () => {
+      const first = new LinoCache(options);
+      const second = new LinoCache(options);
+
+      await first.set('counter', 0, 1000);
+      await Promise.all(
+        Array.from({ length: 20 }, (_, index) =>
+          (index % 2 === 0 ? first : second).incr('counter', 1)
+        )
+      );
+
+      expect(await first.get('counter')).toBe(20);
+      expect(await second.decr('counter', 5)).toBe(15);
+      expect(await first.get('counter')).toBe(15);
+      expect((await first.ttl('counter')) > 0).toBe(true);
+    });
+
+    it('should create missing counters and reject non-numeric values', async () => {
+      const cache = new LinoCache(options);
+
+      expect(await cache.incr('counter', 3)).toBe(3);
+      expect(await cache.decr('counter', 5)).toBe(-2);
+      expect(await cache.increment('counter', 4)).toBe(2);
+      expect(await cache.decrement('counter', 1)).toBe(1);
+      await cache.set('not-a-number', '1');
+
+      let error;
+      try {
+        await cache.incr('not-a-number');
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error instanceof TypeError).toBe(true);
+      expect(await cache.get('not-a-number')).toBe('1');
+    });
+
+    it('should append and prepend strings while preserving TTL', async () => {
+      const cache = new LinoCache(options);
+
+      expect(await cache.append('new', 'middle')).toBe('middle');
+      expect(await cache.prepend('new', 'start-')).toBe('start-middle');
+
+      await cache.set('key', 'middle', 1000);
+      expect(await cache.append('key', '-end')).toBe('middle-end');
+      expect(await cache.prepend('key', 'start-')).toBe('start-middle-end');
+      expect((await cache.ttl('key')) > 0).toBe(true);
+    });
+
+    it('should reject append and prepend for non-string values', async () => {
+      const cache = new LinoCache(options);
+      await cache.set('key', { value: 1 });
+
+      let error;
+      try {
+        await cache.append('key', 'suffix');
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error instanceof TypeError).toBe(true);
+
+      error = undefined;
+      try {
+        await cache.prepend('key', 'prefix');
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error instanceof TypeError).toBe(true);
+      expect((await cache.get('key')).value).toBe(1);
+    });
+  });
+}
+
 describe('LinoCache - wrap()', () => {
   const cacheDir = path.join(TEST_CACHE_DIR, 'wrap');
 
@@ -416,6 +566,15 @@ describe('LinoCache - Factory Functions', () => {
     expect(typeof store.mset).toBe('function');
     expect(typeof store.mdel).toBe('function');
     expect(typeof store.ttl).toBe('function');
+    expect(typeof store.add).toBe('function');
+    expect(typeof store.replace).toBe('function');
+    expect(typeof store.touch).toBe('function');
+    expect(typeof store.getdel).toBe('function');
+    expect(typeof store.getex).toBe('function');
+    expect(typeof store.incr).toBe('function');
+    expect(typeof store.decr).toBe('function');
+    expect(typeof store.append).toBe('function');
+    expect(typeof store.prepend).toBe('function');
   });
 });
 

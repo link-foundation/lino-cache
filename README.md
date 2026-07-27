@@ -14,8 +14,15 @@ A cache-manager compatible file-based cache using [Links Notation](https://githu
   - **Folder mode** - Each cache key stored in a separate `.lino` file
   - **Single-file mode** - All cache entries in one `.lino` file
 - **TTL support** - Time-to-live for automatic expiration
+- **Atomic cache primitives** - Conditional writes, TTL mutation, counters,
+  string mutation, and get-and-mutate operations
 - **Multi-runtime** - Works with Node.js, Bun, and Deno
 - **TypeScript support** - Full type definitions included
+
+See the [competitor compatibility matrix](docs/competitor-compatibility.md) for
+an explicit comparison with Redis, Memcached, and Dragonfly and the staged
+implementation roadmap. The package currently provides semantic compatibility
+for common cache operations; it does not claim wire-protocol compatibility.
 
 ## Installation
 
@@ -124,6 +131,63 @@ Deletes a value from the cache.
 ```javascript
 const deleted = await cache.del('key'); // true if deleted
 ```
+
+#### `add(key, value, [ttl])` / `replace(key, value, [ttl])`
+
+Conditionally writes a value. `add` writes only when no live entry exists;
+`replace` writes only when one does. Both return whether the write occurred.
+
+```javascript
+await cache.add('job-lock', 'worker-1', 5000); // true
+await cache.add('job-lock', 'worker-2', 5000); // false
+await cache.replace('job-lock', 'worker-3', 5000); // true
+```
+
+#### `touch(key, [ttl])` / `getex(key, [ttl])`
+
+Updates expiration without replacing the value. `touch` returns whether the
+key existed; `getex` returns the value while updating its expiration.
+
+```javascript
+await cache.touch('session', 60000);
+const session = await cache.getex('session', 120000);
+```
+
+#### `getdel(key)`
+
+Returns and deletes a value as one local atomic operation.
+
+```javascript
+const job = await cache.getdel('next-job');
+```
+
+Descriptive aliases `getAndDelete` and `getAndTouch` are also available.
+
+#### `incr(key, [amount])` / `decr(key, [amount])`
+
+Atomically mutates finite numeric values. Missing counters start at zero,
+results may be negative, and an existing TTL is preserved. The longer aliases
+`increment` and `decrement` are also available.
+
+```javascript
+await cache.incr('requests'); // 1
+await cache.incr('requests', 4); // 5
+await cache.decr('requests', 2); // 3
+```
+
+#### `append(key, suffix)` / `prepend(key, prefix)`
+
+Atomically mutates string values, creates a missing key from an empty string,
+and preserves an existing TTL.
+
+```javascript
+await cache.append('message', 'world');
+await cache.prepend('message', 'hello '); // 'hello world'
+```
+
+Atomic mutation methods are serialized across cache instances in the same
+JavaScript process. Concurrent-process locking and network protocol
+compatibility are separate roadmap items.
 
 #### `has(key)`
 
