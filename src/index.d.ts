@@ -124,6 +124,95 @@ export declare class LinoCache {
   del(key: string): Promise<boolean>;
 
   /**
+   * Adds a value only when the key does not contain a live entry
+   * @param key - The cache key
+   * @param value - The value to cache
+   * @param ttl - Optional TTL in milliseconds
+   * @returns True if the value was added
+   */
+  add<T>(key: string, value: T, ttl?: number): Promise<boolean>;
+
+  /**
+   * Replaces a value only when the key contains a live entry
+   * @param key - The cache key
+   * @param value - The replacement value
+   * @param ttl - Optional TTL in milliseconds
+   * @returns True if the value was replaced
+   */
+  replace<T>(key: string, value: T, ttl?: number): Promise<boolean>;
+
+  /**
+   * Updates the expiration of a live entry without changing its value
+   * @param key - The cache key
+   * @param ttl - TTL in milliseconds; non-positive values remove expiration
+   * @returns True if the expiration was updated
+   */
+  touch(key: string, ttl?: number): Promise<boolean>;
+
+  /**
+   * Gets and deletes a live entry as one local atomic operation
+   * @param key - The cache key
+   * @returns The previous value or undefined
+   */
+  getdel<T>(key: string): Promise<T | undefined>;
+
+  /**
+   * Descriptive alias for getdel()
+   */
+  getAndDelete<T>(key: string): Promise<T | undefined>;
+
+  /**
+   * Gets a live entry and updates its expiration as one local atomic operation
+   * @param key - The cache key
+   * @param ttl - TTL in milliseconds; non-positive values remove expiration
+   * @returns The value or undefined
+   */
+  getex<T>(key: string, ttl?: number): Promise<T | undefined>;
+
+  /**
+   * Descriptive alias for getex()
+   */
+  getAndTouch<T>(key: string, ttl?: number): Promise<T | undefined>;
+
+  /**
+   * Adds an amount to a numeric entry, creating it from zero when absent
+   * @param key - The cache key
+   * @param amount - Finite amount to add
+   * @returns The updated number
+   */
+  increment(key: string, amount?: number): Promise<number>;
+
+  /**
+   * Redis-style alias for increment()
+   */
+  incr(key: string, amount?: number): Promise<number>;
+
+  /**
+   * Subtracts an amount from a numeric entry, creating it from zero when absent
+   * @param key - The cache key
+   * @param amount - Finite amount to subtract
+   * @returns The updated number, which may be negative
+   */
+  decrement(key: string, amount?: number): Promise<number>;
+
+  /**
+   * Redis-style alias for decrement()
+   */
+  decr(key: string, amount?: number): Promise<number>;
+
+  /**
+   * Appends text to a string entry, creating it when absent
+   * @returns The updated string
+   */
+  append(key: string, suffix: string): Promise<string>;
+
+  /**
+   * Prepends text to a string entry, creating it when absent
+   * @returns The updated string
+   */
+  prepend(key: string, prefix: string): Promise<string>;
+
+  /**
    * Sets multiple values in the cache
    * @param entries - Array of key-value-ttl entries
    * @returns Always returns true
