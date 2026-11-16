@@ -1,6 +1,6 @@
 {
   "name": "@link-foundation/lino-cache",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A cache-manager compatible file-based cache using Links Notation (.lino) format",
   "type": "module",
   "main": "src/index.js",

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Patch Changes
+
+- 750938e: Publish the cache under the @link-foundation scope with public access, updated imports and documentation, and a publish preflight in CI.
+
 ## 0.2.0
 
 ### Minor Changes
