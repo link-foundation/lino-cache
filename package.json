@@ -1,5 +1,5 @@
 {
-  "name": "lino-cache",
+  "name": "@link-foundation/lino-cache",
   "version": "0.2.0",
   "description": "A cache-manager compatible file-based cache using Links Notation (.lino) format",
   "type": "module",
@@ -23,7 +23,8 @@
     "changeset": "changeset",
     "changeset:version": "node scripts/changeset-version.mjs",
     "changeset:publish": "changeset publish",
-    "changeset:status": "changeset status --since=origin/main"
+    "changeset:status": "changeset status --since=origin/main",
+    "publish:preflight": "npm publish --dry-run"
   },
   "keywords": [
     "cache",
@@ -67,5 +68,8 @@
       "prettier --write",
       "prettier --check"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

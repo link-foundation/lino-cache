@@ -1,11 +1,11 @@
 # Competitor compatibility
 
-This document tracks `lino-cache` against Redis, Memcached, and Dragonfly. It
+This document tracks `@link-foundation/lino-cache` against Redis, Memcached, and Dragonfly. It
 is both a compatibility statement and an implementation roadmap.
 
 ## What compatibility means here
 
-`lino-cache` is an embedded, persistent JavaScript cache. Redis, Memcached,
+`@link-foundation/lino-cache` is an embedded, persistent JavaScript cache. Redis, Memcached,
 and Dragonfly are network services. Therefore compatibility has three separate
 levels:
 
@@ -26,27 +26,27 @@ to an embedded store.
 
 ## Cache operations
 
-| Capability              | Redis equivalent    | Memcached equivalent        | `lino-cache`        | Notes                                                    |
-| ----------------------- | ------------------- | --------------------------- | ------------------- | -------------------------------------------------------- |
-| Read and write          | `GET`, `SET`        | `get`, `set`                | ✅ `get`, `set`     | Values may be arbitrary objects, not only byte strings.  |
-| Delete                  | `DEL`               | `delete`                    | ✅ `del`, `mdel`    | Multi-key deletion is exposed directly.                  |
-| Multi-read/write        | `MGET`, `MSET`      | multi-get, pipelined stores | ✅ `mget`, `mset`   | Operations are sequential and not atomic.                |
-| Existence test          | `EXISTS`            | retrieval result            | ✅ `has`            | Expired entries are treated as absent.                   |
-| Enumerate keys          | `SCAN`, `KEYS`      | not supported               | 🟡 `keys`           | Full scan; no cursor or pattern filtering.               |
-| Clear database          | `FLUSHDB`           | `flush_all`                 | ✅ `clear`, `reset` | Scoped to one cache path.                                |
-| Relative expiration     | `PEXPIRE`, `SET PX` | expiration field, `touch`   | ✅ `touch`, `getex` | Millisecond TTLs; non-positive values remove expiration. |
-| Inspect TTL             | `PTTL`              | meta-get flags              | ✅ `ttl`            | Uses Redis-style `-1` and `-2` sentinel values.          |
-| Add only if absent      | `SET NX`            | `add`                       | ✅ `add`            | Expired entries are treated as absent.                   |
-| Replace only if present | `SET XX`            | `replace`                   | ✅ `replace`        | Expired entries are treated as absent.                   |
-| Compare-and-swap        | transactions/Lua    | `cas`                       | ❌                  | No CAS token/version API is defined yet.                 |
-| Increment/decrement     | `INCRBY`, `DECRBY`  | `incr`, `decr`              | ✅ `incr`, `decr`   | Finite numbers; missing counters start at zero.          |
-| Append/prepend          | `APPEND`            | `append`, `prepend`         | ✅                  | String values; missing entries start as empty strings.   |
-| Get and mutate          | `GETDEL`, `GETEX`   | meta-get modes              | ✅                  | Local atomic read/delete and read/expiry update.         |
-| Function-result caching | client-side pattern | client-side pattern         | ✅ `wrap`           | Package-level convenience API.                           |
+| Capability              | Redis equivalent    | Memcached equivalent        | `@link-foundation/lino-cache` | Notes                                                    |
+| ----------------------- | ------------------- | --------------------------- | ----------------------------- | -------------------------------------------------------- |
+| Read and write          | `GET`, `SET`        | `get`, `set`                | ✅ `get`, `set`               | Values may be arbitrary objects, not only byte strings.  |
+| Delete                  | `DEL`               | `delete`                    | ✅ `del`, `mdel`              | Multi-key deletion is exposed directly.                  |
+| Multi-read/write        | `MGET`, `MSET`      | multi-get, pipelined stores | ✅ `mget`, `mset`             | Operations are sequential and not atomic.                |
+| Existence test          | `EXISTS`            | retrieval result            | ✅ `has`                      | Expired entries are treated as absent.                   |
+| Enumerate keys          | `SCAN`, `KEYS`      | not supported               | 🟡 `keys`                     | Full scan; no cursor or pattern filtering.               |
+| Clear database          | `FLUSHDB`           | `flush_all`                 | ✅ `clear`, `reset`           | Scoped to one cache path.                                |
+| Relative expiration     | `PEXPIRE`, `SET PX` | expiration field, `touch`   | ✅ `touch`, `getex`           | Millisecond TTLs; non-positive values remove expiration. |
+| Inspect TTL             | `PTTL`              | meta-get flags              | ✅ `ttl`                      | Uses Redis-style `-1` and `-2` sentinel values.          |
+| Add only if absent      | `SET NX`            | `add`                       | ✅ `add`                      | Expired entries are treated as absent.                   |
+| Replace only if present | `SET XX`            | `replace`                   | ✅ `replace`                  | Expired entries are treated as absent.                   |
+| Compare-and-swap        | transactions/Lua    | `cas`                       | ❌                            | No CAS token/version API is defined yet.                 |
+| Increment/decrement     | `INCRBY`, `DECRBY`  | `incr`, `decr`              | ✅ `incr`, `decr`             | Finite numbers; missing counters start at zero.          |
+| Append/prepend          | `APPEND`            | `append`, `prepend`         | ✅                            | String values; missing entries start as empty strings.   |
+| Get and mutate          | `GETDEL`, `GETEX`   | meta-get modes              | ✅                            | Local atomic read/delete and read/expiry update.         |
+| Function-result caching | client-side pattern | client-side pattern         | ✅ `wrap`                     | Package-level convenience API.                           |
 
 ## Data structures and programmable features
 
-| Capability                      | Redis/Dragonfly | Memcached | `lino-cache`                                      |
+| Capability                      | Redis/Dragonfly | Memcached | `@link-foundation/lino-cache`                     |
 | ------------------------------- | --------------- | --------- | ------------------------------------------------- |
 | Strings/counters                | ✅              | ✅        | 🟡 core counter and concatenation operations      |
 | Hashes                          | ✅              | ❌        | 🟡 objects can be stored; field operations absent |
@@ -64,7 +64,7 @@ documented operations with concurrency tests.
 
 ## Persistence, scale, and operations
 
-| Capability                    | Redis/Dragonfly  | Memcached            | `lino-cache`                      |
+| Capability                    | Redis/Dragonfly  | Memcached            | `@link-foundation/lino-cache`     |
 | ----------------------------- | ---------------- | -------------------- | --------------------------------- |
 | Persistence                   | snapshots/logs   | no                   | ✅ `.lino` files                  |
 | TTL eviction                  | ✅               | ✅                   | ✅ lazy expiration                |

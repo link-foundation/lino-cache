@@ -10,7 +10,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 // TODO: Update this to match your package name in package.json
-const PACKAGE_NAME = 'lino-cache';
+const PACKAGE_NAME = '@link-foundation/lino-cache';
 
 try {
   // Count changeset files (excluding README.md and config.json)

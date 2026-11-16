@@ -1,7 +1,7 @@
 /**
- * lino-cache - A cache-manager compatible file-based cache using Links Notation
+ * @link-foundation/lino-cache - A cache-manager compatible file-based cache using Links Notation
  *
- * Type definitions for lino-cache
+ * Type definitions for @link-foundation/lino-cache
  */
 
 /**
@@ -75,7 +75,7 @@ export interface MsetEntry<T = unknown> {
  *
  * @example
  * ```typescript
- * import { LinoCache } from 'lino-cache';
+ * import { LinoCache } from '@link-foundation/lino-cache';
  *
  * // Folder mode (default)
  * const folderCache = new LinoCache({
@@ -289,7 +289,7 @@ export declare class LinoCache {
  *
  * @example
  * ```typescript
- * import { createLinoCache } from 'lino-cache';
+ * import { createLinoCache } from '@link-foundation/lino-cache';
  *
  * const cache = createLinoCache({
  *   mode: 'folder',
@@ -312,7 +312,7 @@ export declare function createLinoCache(options?: LinoCacheOptions): LinoCache;
  * @example
  * ```typescript
  * import { caching } from 'cache-manager';
- * import { linoStore } from 'lino-cache';
+ * import { linoStore } from '@link-foundation/lino-cache';
  *
  * const cache = await caching(linoStore({
  *   mode: 'folder',

@@ -1,5 +1,5 @@
 /**
- * lino-cache - A cache-manager compatible file-based cache using Links Notation
+ * @link-foundation/lino-cache - A cache-manager compatible file-based cache using Links Notation
  *
  * Supports two modes:
  * - Single-file mode: All cache entries stored in one .lino file

@@ -1,10 +1,10 @@
 /**
- * Basic usage examples for lino-cache
+ * Basic usage examples for @link-foundation/lino-cache
  *
  * Run with: node examples/basic-usage.js
  */
 
-import { LinoCache, createLinoCache } from '../src/index.js';
+import { LinoCache, createLinoCache } from '@link-foundation/lino-cache';
 import { promises as fs } from 'node:fs';
 
 // Helper to delay execution
@@ -164,7 +164,7 @@ async function exampleFactory() {
 }
 
 async function main() {
-  console.log('=== lino-cache Basic Usage Examples ===\n');
+  console.log('=== @link-foundation/lino-cache Basic Usage Examples ===\n');
 
   await exampleFolderMode();
   await exampleSingleFileMode();
