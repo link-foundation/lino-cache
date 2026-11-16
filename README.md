@@ -1,9 +1,9 @@
-# lino-cache
+# @link-foundation/lino-cache
 
 A cache-manager compatible file-based cache using [Links Notation](https://github.com/link-foundation/links-notation) (.lino) format instead of JSON.
 
 [![Tests](https://github.com/link-foundation/lino-cache/actions/workflows/release.yml/badge.svg)](https://github.com/link-foundation/lino-cache/actions/workflows/release.yml)
-[![npm version](https://img.shields.io/npm/v/lino-cache.svg)](https://www.npmjs.com/package/lino-cache)
+[![npm version](https://img.shields.io/npm/v/@link-foundation/lino-cache.svg)](https://www.npmjs.com/package/@link-foundation/lino-cache)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
 ## Features
@@ -27,13 +27,17 @@ for common cache operations; it does not claim wire-protocol compatibility.
 ## Installation
 
 ```bash
-npm install lino-cache
+npm install @link-foundation/lino-cache
 ```
 
 ## Quick Start
 
 ```javascript
-import { LinoCache, createLinoCache, linoStore } from 'lino-cache';
+import {
+  LinoCache,
+  createLinoCache,
+  linoStore,
+} from '@link-foundation/lino-cache';
 
 // Create a cache instance (folder mode by default)
 const cache = new LinoCache({
@@ -291,7 +295,7 @@ Creates a cache-manager compatible store.
 
 ```javascript
 import { caching } from 'cache-manager';
-import { linoStore } from 'lino-cache';
+import { linoStore } from '@link-foundation/lino-cache';
 
 const cache = await caching(
   linoStore({
@@ -338,7 +342,7 @@ npm run check
 ## Links
 
 - [GitHub Repository](https://github.com/link-foundation/lino-cache)
-- [npm Package](https://www.npmjs.com/package/lino-cache)
+- [npm Package](https://www.npmjs.com/package/@link-foundation/lino-cache)
 - [lino-objects-codec](https://github.com/link-foundation/lino-objects-codec)
 - [Links Notation](https://github.com/link-foundation/links-notation)
 - [cache-manager](https://www.npmjs.com/package/cache-manager)

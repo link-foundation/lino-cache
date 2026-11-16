@@ -24,7 +24,7 @@
  */
 
 // TODO: Update this to match your package name in package.json
-const PACKAGE_NAME = 'lino-cache';
+const PACKAGE_NAME = '@link-foundation/lino-cache';
 
 // Load use-m dynamically
 const { use } = eval(

@@ -1,12 +1,16 @@
 /**
- * Tests for lino-cache
+ * Tests for @link-foundation/lino-cache
  * Works with Node.js, Bun, and Deno
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'test-anywhere';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { LinoCache, createLinoCache, linoStore } from '../src/index.js';
+import {
+  LinoCache,
+  createLinoCache,
+  linoStore,
+} from '@link-foundation/lino-cache';
 
 // Test directory for cache files
 const TEST_CACHE_DIR = '.test-cache';
